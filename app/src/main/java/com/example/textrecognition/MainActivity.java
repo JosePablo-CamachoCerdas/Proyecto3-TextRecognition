@@ -1,5 +1,10 @@
 package com.example.textrecognition;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Locale;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +19,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.speech.tts.TextToSpeech;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -24,12 +30,19 @@ import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String FILE_NAME = "example.txt";
 
+    text_to_speech TTS = null;
     ImageView imageView;
     TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        //  Text to speech variables
+        TTS = new text_to_speech();
+        TTS.init(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //find imageview
@@ -51,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
         super.onActivityResult(requestCode, resultCode, data);
         Bundle bundle = data.getExtras();
         //from bundle, extract the image
@@ -73,14 +87,37 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(FirebaseVisionText firebaseVisionText) {
                 String s = firebaseVisionText.getText();
                 textView.setText(s);
+
+                // Text to speech when converting image to plain text, calling init method
+                TTS.initQueue(s);
+
+                // Text to .txt file
+                FileOutputStream fos = null;
+
+                try {
+                    fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
+                    fos.write(s.getBytes());
+                    Toast.makeText(MainActivity.this, "Saved to " + getFilesDir() + "/" + FILE_NAME, Toast.LENGTH_LONG).show();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (fos != null){
+                        try {
+                            fos.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
-        });
-        //6. if task is failure
-        task.addOnFailureListener(new OnFailureListener() {
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+        //6. if task is failure
     }
 }
