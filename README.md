@@ -8,4 +8,4 @@ Para correr este laboratorio, se debe inicializar una sesión en Android Studio,
 
 ## Video:
 
-`` enlace aquí ``
+`` https://youtu.be/Blk0xH6nvzA ``
